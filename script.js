@@ -8,6 +8,70 @@
   const $  = (s, c = document) => c.querySelector(s);
   const $$ = (s, c = document) => Array.from(c.querySelectorAll(s));
 
+  /* ---------- Showcase rendering (clients / study abroad / colleges) ---------- */
+  (function renderShowcases() {
+    const PD = window.PD;
+    if (!PD) return;
+    const mk = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+    function logoTile(cls, src, abbr, name) {
+      const tile = mk('span', cls);
+      if (src) {
+        const img = new Image();
+        img.src = src; img.alt = name || ''; img.loading = 'lazy'; img.decoding = 'async';
+        img.onerror = () => { tile.classList.add('is-mono'); tile.textContent = abbr; };
+        tile.appendChild(img);
+      } else { tile.classList.add('is-mono'); tile.textContent = abbr; }
+      return tile;
+    }
+    const initials = (n) => (n.replace(/[^A-Za-z0-9 ]/g, ' ').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('') || '?').toUpperCase();
+
+    // Section 1 — client cards
+    const cg = $('[data-grid="clients"]');
+    if (cg) PD.clients.forEach((c, i) => {
+      const card = mk('div', 'client-card reveal'); card.setAttribute('data-tilt', '');
+      card.setAttribute('data-reveal', ''); card.setAttribute('data-reveal-delay', String(i * 80));
+      card.appendChild(logoTile('client-card__logo', c.logo, initials(c.name), c.name));
+      const meta = mk('div', 'client-card__meta');
+      meta.appendChild(mk('span', 'client-card__name', c.name));
+      meta.appendChild(mk('span', 'client-card__tag', '360° marketing'));
+      card.appendChild(meta);
+      cg.appendChild(card);
+    });
+
+    // Logo chip (favicon for study via domain, local/monogram for colleges)
+    function chipFor(item, mods) {
+      const chip = mk('span', 'lchip' + (mods || ''));
+      const src = item.domain ? ('https://www.google.com/s2/favicons?domain=' + item.domain + '&sz=128') : item.logo;
+      chip.appendChild(logoTile('lchip__logo', src, item.abbr, item.name));
+      chip.appendChild(mk('span', 'lchip__name', item.name));
+      return chip;
+    }
+    // Slow scrolling marquee, distributed across rows. speed = seconds per item (higher = slower).
+    function buildMarquee(container, items, rows, speed, mods) {
+      const buckets = Array.from({ length: rows }, () => []);
+      items.forEach((c, i) => buckets[i % rows].push(c));
+      buckets.forEach((bucket, ri) => {
+        const m = mk('div', 'marquee' + (ri % 2 ? ' marquee--rev' : '')); m.setAttribute('data-marquee', '');
+        const dur = Math.round(bucket.length * speed) + 's';
+        [false, true].forEach((hidden) => {
+          const tr = mk('div', 'marquee__track'); if (hidden) tr.setAttribute('aria-hidden', 'true');
+          bucket.forEach((c) => tr.appendChild(chipFor(c, mods)));
+          tr.style.animationDuration = dur;
+          m.appendChild(tr);
+        });
+        container.appendChild(m);
+      });
+    }
+
+    // Section 2 — study abroad (slow marquee, 2 rows)
+    const sg = $('[data-grid="study"]');
+    if (sg) buildMarquee(sg, PD.study, 2, 2.6, '');
+
+    // Section 3 — colleges (slow marquee, 4 rows)
+    const cm = $('[data-grid="colleges"]');
+    if (cm) buildMarquee(cm, PD.colleges, 4, 3.0, ' lchip--sm');
+  })();
+
   /* ---------- Loading screen ---------- */
   (function loader() {
     const el = $('#loader'), bar = $('#loaderBar'), pct = $('#loaderPct');
