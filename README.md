@@ -35,3 +35,4 @@ Drag the folder into **Vercel** or **Netlify**, or push to **GitHub Pages**. Ful
 - **Brands / institutions:** both `.marquee__track` lists (keep identical for the seamless loop)
 - **Typed phrases:** `data-typed="phrase one|phrase two|..."` on any `.typed` span
 - **Colors:** CSS variables at the top of `styles.css`
+# abhishekgupta-portfolio2026
